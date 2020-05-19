@@ -1,5 +1,5 @@
-iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-iptables -A FORWARD -p tcp --dport 80 -j ACCEPT
+#iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+#iptables -A FORWARD -p tcp --dport 80 -j ACCEPT
 
 
 
