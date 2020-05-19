@@ -1,0 +1,5 @@
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 80 -j ACCEPT
+
+
+redis://h:pc85082d9917e6e0af8d5b1c0cbfc7839100bffb423283d55d066c6dc61ca0f1f@ec2-54-208-246-139.compute-1.amazonaws.com:25579
