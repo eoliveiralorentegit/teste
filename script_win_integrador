@@ -1,0 +1,83 @@
+Write-Host "Atualizando repositório..."
+    Remove-Item "C:\integrador"
+
+    #Criar diretório
+    mkdir c:\integrador
+    cd c:\integrador
+
+    #Download
+    Invoke-WebRequest https://api.github.com/repos/myfreecomm/nexaas.integrador.oms-pampili/zipball/master?access_token=02bc55c0d81dcc166b1f7378c555df87889b660e -Headers @{"Accept"= "application/vnd.github.v3.raw"} -OutFile "C:\integrador\integrador.zip"
+
+    #Descompactar
+    Expand-Archive -LiteralPath C:\integrador\integrador.zip -DestinationPath C:\integrador
+
+    #Deletar
+    Remove-Item C:\integrador\integrador.zip
+
+
+    #Renomear o diretorio
+    Get-ChildItem * | Rename-Item -NewName {"pampili"}
+Write-Host "Repositório atualizado!"
+
+Write-Host "Inicio do deploy..."
+    #Movendo arquivo de configuração
+    Write-Host "Copiando arquivo..."
+    Copy-Item -Recurse "C:\Users\Administrator\Downloads\appsettings.Staging.json" -Destination "C:\integrador\pampili\src\PampiliNexaasOms.Web"
+    Write-Host "Arquivo copiado!"
+
+
+    cd C:\integrador\pampili\src\PampiliNexaasOms.Web\ClientApp
+
+    #Remove diretorio da estrutura da pasta ClientApp
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue "./dist"
+
+    #Download nodejs
+    Invoke-WebRequest -Uri https://nodejs.org/dist/v12.16.3/node-v12.16.3-x64.msi -OutFile "C:\integrador\node-v12.16.3-x64.msi"
+
+    #Download aspnet
+    Invoke-WebRequest -Uri https://download.visualstudio.microsoft.com/download/pr/a16689d1-0872-4ef9-a592-406d3038d8f7/cf4f84504385a599f0cb6a5c113ccb34/aspnetcore-runtime-3.1.0-win-x64.exe -OutFile "C:\integrador\aspnetcore-runtime-3.1.0-win-x64.exe"
+
+    #Instalar nodejs
+    Write-Host "Instalando Nodejs..."
+    Start-Process -FilePath "C:\integrador\node-v12.16.3-x64.msi" -ArgumentList '/qn' -Wait
+    Write-Host "Fim da instalação!"
+
+    #Instalar aspnet
+    Write-Host "Inicio da instalação ASPnet..."
+    Start-Process -FilePath "C:\integrador\aspnetcore-runtime-3.1.0-win-x64.exe" -ArgumentList '/S', '/v''/qn' -Wait
+    Write-Host "Fim da instalação!"
+
+    #Instalar dotnet
+    Write-Host "Inicio da instalação Dotnet..."
+    Start-Process -FilePath "C:\Users\Administrator\Downloads\dotnet-runtime-3.0.1-win-x64.exe" -ArgumentList '/S', '/v''/qn' -Wait
+
+    invoke-expression -Command C:\Users\Administrator\Downloads\.\dotnet-install.ps1
+    Write-Host "Fim da instalação!"
+
+    npm install;
+
+    npm run Staging;
+
+    cd ..;
+
+    #Remover diretorio da estrutura da pasta PampiliNexaasOms.Web
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue ".\dist"
+
+    
+    dotnet publish -c Release /p:EnvironmentName=Staging -o ".\dist\staging"
+
+    #Criar diretório
+    New-Item -ItemType directory -Path ".\dist\staging\ClientApp"
+
+    #Copiar o diretório para o destino informado
+    Copy-Item -Recurse ".\ClientApp\dist" -Destination ".\dist\staging\ClientApp"
+
+    #Compactar 
+    Compress-Archive -Path ".\dist\staging\*" -CompressionLevel Fastest -DestinationPath ".\dist\staging-$((Get-Date).ToString('ddMMyyyyHHmmssfff')).zip";
+
+    #Remover
+    Remove-Item C:\inetpub\wwwroot\* -Recurse -Force
+
+    #Descompactar
+    Expand-Archive C:\integrador\pampili\src\PampiliNexaasOms.Web\dist\*.zip -DestinationPath "C:\inetpub\wwwroot"
+Write-Host "Deploy finalizado!"
